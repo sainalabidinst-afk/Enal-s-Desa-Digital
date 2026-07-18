@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@smart-village/ui": ["packages/ui/src/index.ts"],
+      "@smart-village/types": ["packages/types/src/index.ts"],
+      "@smart-village/api-client": ["packages/api-client/src/index.ts"],
+      "@smart-village/auth": ["packages/auth/src/index.ts"],
+      "@smart-village/config": ["packages/config/src/index.ts"],
+      "@smart-village/utils": ["packages/utils/src/index.ts"],
+      "@smart-village/shared": ["packages/shared/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,46 @@
+{
+  "name": "smart-village",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Smart Village Platform - Modular architecture for Indonesian Village Digitalization",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:generate": "turbo run db:generate",
+    "db:push": "turbo run db:push",
+    "db:seed": "turbo run db:seed",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@turbo/gen": "^2.4.4",
+    "autoprefixer": "^10.5.4",
+    "husky": "^9.1.7",
+    "prettier": "^3.5.0",
+    "tailwindcss-animate": "^1.0.7",
+    "turbo": "^2.4.4",
+    "typescript": "^5.7.3"
+  },
+  "packageManager": "npm@11.6.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "resolutions": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

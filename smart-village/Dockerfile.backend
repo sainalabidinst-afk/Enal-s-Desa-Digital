@@ -1,0 +1,15 @@
+FROM node:24-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json* turbo.json ./
+COPY apps/backend-api/package.json ./apps/backend-api/
+COPY packages/*/package.json ./packages/*/
+
+RUN npm ci
+
+COPY . .
+
+EXPOSE 3001
+
+CMD ["npm", "run", "dev", "--workspace=apps/backend-api"]
