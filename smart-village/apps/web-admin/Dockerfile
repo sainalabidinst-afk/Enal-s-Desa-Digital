@@ -5,9 +5,10 @@ WORKDIR /app
 COPY package*.json ./
 COPY apps/web-admin/package*.json ./apps/web-admin/
 
-RUN npm ci
+RUN npm install
 
 COPY apps/web-admin ./apps/web-admin/
+COPY turbo.json ./
 
 WORKDIR /app/apps/web-admin
 
@@ -17,7 +18,6 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/web-admin/node_modules ./node_modules
 COPY --from=builder /app/apps/web-admin/.next ./.next
 COPY --from=builder /app/apps/web-admin/public ./public

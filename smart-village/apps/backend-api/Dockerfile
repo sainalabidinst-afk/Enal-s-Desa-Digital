@@ -3,15 +3,17 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
+COPY turbo.json ./
 COPY apps/backend-api/package*.json ./apps/backend-api/
 COPY apps/backend-api/prisma ./apps/backend-api/prisma/
 
-RUN npm ci
+RUN npm install
 
 COPY apps/backend-api ./apps/backend-api/
 
-RUN npx prisma generate
-RUN npm run build --workspace=@smart-village/backend-api
+WORKDIR /app/apps/backend-api
+
+RUN npm run build
 
 FROM node:20-alpine AS runner
 
