@@ -1,6 +1,10 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, IsBoolean, Matches, Length, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, IsBoolean, Length } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Gender } from '@prisma/client';
+
+export enum Gender {
+  LAKI_LAKI = 'LAKI_LAKI',
+  PEREMPUAN = 'PEREMPUAN',
+}
 
 export class CreateCitizenDto {
   @IsString()
@@ -121,12 +125,10 @@ export class UpdateCitizenDto {
 
   @IsOptional()
   @IsString()
-  @Length(3, 3)
   rt?: string;
 
   @IsOptional()
   @IsString()
-  @Length(3, 3)
   rw?: string;
 
   @IsOptional()

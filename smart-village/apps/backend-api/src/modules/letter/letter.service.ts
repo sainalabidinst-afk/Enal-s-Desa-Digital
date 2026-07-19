@@ -1,6 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
-import { LetterStatus } from '@prisma/client';
+
+export enum LetterStatus {
+  PENDING = 'PENDING',
+  IN_REVIEW = 'IN_REVIEW',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  SIGNED = 'SIGNED',
+  CANCELLED = 'CANCELLED',
+}
 
 @Injectable()
 export class LetterService {

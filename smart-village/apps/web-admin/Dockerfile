@@ -1,29 +1,17 @@
-FROM node:20-alpine AS builder
+FROM node:20-alpine AS development
 
 WORKDIR /app
+
+ENV NODE_ENV=development
 
 COPY package*.json ./
 COPY apps/web-admin/package*.json ./apps/web-admin/
-
-RUN npm install
-
 COPY apps/web-admin ./apps/web-admin/
-COPY turbo.json ./
 
 WORKDIR /app/apps/web-admin
 
-RUN npm run build
-
-FROM node:20-alpine AS runner
-
-WORKDIR /app
-
-COPY --from=builder /app/apps/web-admin/node_modules ./node_modules
-COPY --from=builder /app/apps/web-admin/.next ./.next
-COPY --from=builder /app/apps/web-admin/public ./public
-COPY --from=builder /app/apps/web-admin/package.json ./package.json
-COPY --from=builder /app/apps/web-admin/next.config.js ./next.config.js
+RUN npm install
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "dev"]

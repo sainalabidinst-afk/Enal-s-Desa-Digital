@@ -1,35 +1,51 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
-import { Complaint, ComplaintStatus } from '@prisma/client';
-import { CreateComplaintDto } from './dto/create-complaint.dto';
-import { UpdateComplaintDto } from './dto/update-complaint.dto';
-import { QueryComplaintDto } from './dto/query-complaint.dto';
+
+export enum ComplaintStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  RESOLVED = 'RESOLVED',
+  CLOSED = 'CLOSED',
+  REJECTED = 'REJECTED',
+}
+
+export enum ComplaintCategory {
+  INFRASTRUCTURE = 'INFRASTRUCTURE',
+  SECURITY = 'SECURITY',
+  SANITATION = 'SANITATION',
+  WATER = 'WATER',
+  ELECTRICITY = 'ELECTRICITY',
+  HEALTH = 'HEALTH',
+  EDUCATION = 'EDUCATION',
+  SOCIAL = 'SOCIAL',
+  ENVIRONMENT = 'ENVIRONMENT',
+  TRAFFIC = 'TRAFFIC',
+  PUBLIC_FACILITY = 'PUBLIC_FACILITY',
+  OTHER = 'OTHER',
+}
 
 @Injectable()
 export class ComplaintService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createComplaintDto: CreateComplaintDto, userId: string) {
+  async create(data: { citizenId: string; category: ComplaintCategory; subject: string; description: string }, userId: string) {
+    const citizen = await this.prisma.citizen.findFirst({
+      where: { id: data.citizenId, deletedAt: null },
+    });
+
+    if (!citizen) {
+      throw new BadRequestException('Citizen not found');
+    }
+
     const trackingNumber = this.generateTrackingNumber();
 
     const complaint = await this.prisma.complaint.create({
       data: {
-        ...createComplaintDto,
+        ...data,
         trackingNumber,
         submittedBy: userId,
         status: ComplaintStatus.PENDING,
-      },
-    });
-
-    await this.prisma.complaintTimeline.create({
-      data: {
-        complaintId: complaint.id,
-        status: ComplaintStatus.PENDING,
-        action: 'CREATE',
-        notes: 'Complaint created',
-        userId,
-        userName: 'User',
-        userRole: 'USER',
+        villageId: citizen.villageId || undefined,
       },
     });
 
@@ -40,31 +56,22 @@ export class ComplaintService {
     };
   }
 
-  async findAll(query: QueryComplaintDto) {
-    const page = query.page || 1;
-    const limit = query.limit || 10;
+  async findAll(params: { page?: number; limit?: number; search?: string; status?: string }) {
+    const page = params.page || 1;
+    const limit = params.limit || 10;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = { deletedAt: null };
 
-    if (query.search) {
+    if (params.search) {
       where.OR = [
-        { trackingNumber: { contains: query.search, mode: 'insensitive' } },
-        { subject: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
+        { trackingNumber: { contains: params.search, mode: 'insensitive' } },
+        { subject: { contains: params.search, mode: 'insensitive' } },
       ];
     }
 
-    if (query.status) {
-      where.status = query.status;
-    }
-
-    if (query.category) {
-      where.category = query.category;
-    }
-
-    if (query.assignedTo) {
-      where.assignedTo = query.assignedTo;
+    if (params.status) {
+      where.status = params.status;
     }
 
     const [data, total] = await this.prisma.$transaction([
@@ -92,7 +99,7 @@ export class ComplaintService {
 
   async findOne(id: string) {
     const complaint = await this.prisma.complaint.findFirst({
-      where: { id },
+      where: { id, deletedAt: null },
     });
 
     if (!complaint) {
@@ -105,65 +112,40 @@ export class ComplaintService {
     };
   }
 
-  async findByTrackingNumber(trackingNumber: string) {
-    const complaint = await this.prisma.complaint.findFirst({
-      where: { trackingNumber },
-    });
+  async updateStatus(id: string, status: ComplaintStatus, userId: string) {
+    const complaint = await this.prisma.complaint.findFirst({ where: { id, deletedAt: null } });
 
     if (!complaint) {
       throw new NotFoundException('Complaint not found');
     }
-
-    return {
-      success: true,
-      data: complaint,
-    };
-  }
-
-  async update(id: string, updateComplaintDto: UpdateComplaintDto, userId: string) {
-    const complaint = await this.prisma.complaint.findFirst({ where: { id } });
-
-    if (!complaint) {
-      throw new NotFoundException('Complaint not found');
-    }
-
-    const oldStatus = complaint.status;
 
     const updated = await this.prisma.complaint.update({
       where: { id },
-      data: updateComplaintDto,
+      data: { status, resolvedAt: [ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED].includes(status) ? new Date() : undefined, resolvedBy: [ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED].includes(status) ? userId : undefined },
     });
-
-    if (updateComplaintDto.status && updateComplaintDto.status !== oldStatus) {
-      await this.prisma.complaintTimeline.create({
-        data: {
-          complaintId: id,
-          status: updateComplaintDto.status,
-          action: 'STATUS_CHANGE',
-          notes: `Status changed from ${oldStatus} to ${updateComplaintDto.status}`,
-          userId,
-          userName: 'User',
-          userRole: 'USER',
-        },
-      });
-    }
 
     return {
       success: true,
-      message: 'Complaint updated successfully',
+      message: `Complaint status updated to ${status}`,
       data: updated,
     };
   }
 
-  async getTimeline(id: string) {
-    const timeline = await this.prisma.complaintTimeline.findMany({
-      where: { complaintId: id },
-      orderBy: { createdAt: 'desc' },
+  async remove(id: string) {
+    const complaint = await this.prisma.complaint.findFirst({ where: { id, deletedAt: null } });
+
+    if (!complaint) {
+      throw new NotFoundException('Complaint not found');
+    }
+
+    await this.prisma.complaint.update({
+      where: { id },
+      data: { deletedAt: new Date() },
     });
 
     return {
       success: true,
-      data: timeline,
+      message: 'Complaint deleted successfully',
     };
   }
 

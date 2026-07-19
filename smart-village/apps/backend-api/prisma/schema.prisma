@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["uuidV7"]
+  provider = "prisma-client-js"
 }
 
 datasource db {

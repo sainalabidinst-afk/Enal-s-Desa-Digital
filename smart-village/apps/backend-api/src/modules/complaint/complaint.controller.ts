@@ -1,21 +1,7 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { ComplaintService } from './complaint.service';
-import { CreateComplaintDto } from './dto/create-complaint.dto';
-import { UpdateComplaintDto } from './dto/update-complaint.dto';
-import { QueryComplaintDto } from './dto/query-complaint.dto';
+import { ComplaintService, ComplaintStatus, ComplaintCategory } from './complaint.service';
 import { JwtAuthGuard } from '../../core/common/guards/jwt-auth.guard';
-import { RequirePermissions } from '../../core/common/decorators/permissions.decorator';
 
 @ApiTags('Complaints')
 @Controller('complaints')
@@ -25,43 +11,42 @@ export class ComplaintController {
   constructor(private readonly complaintService: ComplaintService) {}
 
   @Post()
-  @RequirePermissions('complaint:create')
   @ApiOperation({ summary: 'Create new complaint' })
-  create(@Body() createComplaintDto: CreateComplaintDto, @Query('userId') userId: string) {
-    return this.complaintService.create(createComplaintDto, userId);
+  create(@Body() body: { citizenId: string; category: ComplaintCategory; subject: string; description: string }, @Request() req: any) {
+    return this.complaintService.create(body, req.user.id);
   }
 
   @Get()
-  @RequirePermissions('complaint:read')
-  @ApiOperation({ summary: 'Get all complaints with pagination' })
-  findAll(@Query() query: QueryComplaintDto) {
-    return this.complaintService.findAll(query);
-  }
-
-  @Get('tracking/:trackingNumber')
-  @ApiOperation({ summary: 'Get complaint by tracking number' })
-  findByTrackingNumber(@Param('trackingNumber') trackingNumber: string) {
-    return this.complaintService.findByTrackingNumber(trackingNumber);
-  }
-
-  @Get(':id/timeline')
-  @RequirePermissions('complaint:read')
-  @ApiOperation({ summary: 'Get complaint timeline' })
-  getTimeline(@Param('id') id: string) {
-    return this.complaintService.getTimeline(id);
+  @ApiOperation({ summary: 'Get all complaints' })
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.complaintService.findAll({
+      page: page ? parseInt(page) : undefined,
+      limit: limit ? parseInt(limit) : undefined,
+      search,
+      status,
+    });
   }
 
   @Get(':id')
-  @RequirePermissions('complaint:read')
   @ApiOperation({ summary: 'Get complaint by ID' })
   findOne(@Param('id') id: string) {
     return this.complaintService.findOne(id);
   }
 
   @Patch(':id')
-  @RequirePermissions('complaint:update')
-  @ApiOperation({ summary: 'Update complaint' })
-  update(@Param('id') id: string, @Body() updateComplaintDto: UpdateComplaintDto, @Query('userId') userId: string) {
-    return this.complaintService.update(id, updateComplaintDto, userId);
+  @ApiOperation({ summary: 'Update complaint status' })
+  updateStatus(@Param('id') id: string, @Body() body: { status: ComplaintStatus }, @Request() req: any) {
+    return this.complaintService.updateStatus(id, body.status, req.user.id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete complaint' })
+  remove(@Param('id') id: string) {
+    return this.complaintService.remove(id);
   }
 }

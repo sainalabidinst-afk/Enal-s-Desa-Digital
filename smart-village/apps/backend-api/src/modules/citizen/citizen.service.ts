@@ -68,7 +68,7 @@ export class CitizenService {
         where,
         skip,
         take: limit,
-        orderBy: query.sortBy ? { [query.sortBy]: query.sortOrder || 'desc' } : { createdAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
         include: { familyCard: { select: { nkk: true, headName: true } } },
       }),
       this.prisma.citizen.count({ where }),
