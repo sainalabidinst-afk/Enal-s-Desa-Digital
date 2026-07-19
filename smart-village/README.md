@@ -1,82 +1,86 @@
-# Smart Village Platform
+# Smart Village
 
-Platform digital terpadu untuk Pemerintah Desa, Polsek, dan masyarakat dalam satu ekosistem yang aman, modular, dan siap dikembangkan dalam jangka panjang.
+Aplikasi Smart Village berbasis Web dan Mobile untuk Pemerintah Desa dan Polsek.
+
+> **"Bangun aplikasi yang selesai, bukan platform yang sempurna."**
+
+Target: **1 desa berhasil** dalam 2-3 bulan.
 
 ## Arsitektur
 
 ```
 smart-village/
-├── apps/                    # Aplikasi frontend dan backend
-│   ├── web-admin/          # Web Admin (Next.js 15)
-│   ├── mobile-warga/       # Mobile Warga (Expo)
-│   ├── mobile-petugas/     # Mobile Petugas (Expo)
-│   ├── backend-api/        # Backend API (NestJS)
-│   ├── ai-service/         # AI Service (FastAPI/Node)
-│   └── gateway/            # API Gateway
-├── packages/               # Shared packages
-│   ├── ui/                 # UI Components (shadcn/ui)
-│   ├── types/              # TypeScript types
-│   ├── api-client/         # API Client
-│   ├── auth/               # Auth utilities
-│   ├── config/             # Config utilities
-│   ├── eslint/             # ESLint config
-│   ├── tsconfig/           # TypeScript config
-│   ├── utils/              # Utility functions
-│   └── shared/             # Shared code
-├── services/               # Microservices
-│   ├── auth/
-│   ├── citizen/
-│   ├── letter/
-│   ├── complaint/
-│   ├── asset/
-│   ├── gis/
-│   ├── notification/
-│   ├── dashboard/
-│   ├── police/
-│   ├── analytics/
-│   └── ai/
-└── docs/                   # Dokumentasi
+├── apps/
+│   ├── web-admin/       # Web Admin (Next.js)
+│   ├── mobile-warga/    # Mobile Warga (Expo)
+│   └── mobile-petugas/  # Mobile Petugas (Expo)
+├── packages/
+│   ├── ui/              # UI Components (shadcn/ui)
+│   ├── types/           # TypeScript types
+│   ├── api-client/      # API Client
+│   └── utils/           # Utility functions
+└── prisma/
+    └── schema.prisma    # Database schema (10-15 tabel inti)
 ```
+
+## Modul Aplikasi
+
+### Web Admin & Mobile Petugas
+- Dashboard
+- Master Data: Penduduk, KK, RT/RW, Dusun
+- Pelayanan: Surat, Pengaduan
+- Inventaris
+- Laporan
+- Pengguna & Hak Akses
+- Pengaturan
+
+### Mobile Warga
+- Login
+- Profil
+- Ajukan Surat
+- Cek Status Surat
+- Pengaduan
+- Berita
+- Agenda
+- Notifikasi
+
+## Database (10-15 tabel inti)
+
+- users
+- roles
+- citizens
+- family_cards
+- letters
+- complaints
+- assets
+- news
+- events
+- notifications
+- audit_logs
 
 ## Tech Stack
 
-- **Frontend Web**: Next.js 15, React 19, TypeScript, TailwindCSS, shadcn/ui, TanStack Query, Zustand
+- **Backend**: NestJS, Prisma, PostgreSQL
+- **Web**: Next.js, TailwindCSS, TypeScript
 - **Mobile**: React Native + Expo (TypeScript)
-- **Backend**: NestJS, Prisma ORM, PostgreSQL, Redis, MinIO
-- **Authentication**: JWT + Refresh Token, **RBAC (Permission-based access)**
-  - `@RequirePermissions(...)` menggunakan `req.user.role.permissions[*].slug`
-- **Notification**: Firebase Cloud Messaging, Email, WhatsApp Gateway
-- **GIS**: Leaflet, OpenStreetMap
-- **AI**: OpenAI API, Ollama, RAG
-- **Infrastructure**: Docker, GitHub Actions, Turborepo
-
 
 ## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Run all apps in development
 npm run dev
-
-# Build all apps
 npm run build
-
-# Run lint
 npm run lint
-
-# Format code
-npm run format
 ```
 
-## Roadmap
+## Roadmap MVP (6 Sprint)
 
-- **Phase 1 (MVP)**: Login, Data Penduduk, Pelayanan Surat, Pengaduan, Dashboard
-- **Phase 2**: Inventaris Aset, GIS, E-Office, Absensi
-- **Phase 3**: Integrasi Polsek (Patroli, Panic Button, Manajemen Kasus)
-- **Phase 4**: Posyandu, UMKM, Pertanian, APBDes, BUMDes
-- **Phase 5**: AI Assistant, Smart CCTV, Analytics, Decision Support
+- **Sprint 1**: Login, User Management, Dashboard
+- **Sprint 2**: Data Penduduk, Kartu Keluarga
+- **Sprint 3**: Pelayanan Surat
+- **Sprint 4**: Pengaduan Masyarakat
+- **Sprint 5**: Inventaris Aset
+- **Sprint 6**: Berita, Agenda, Laporan
 
 ## License
 
