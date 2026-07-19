@@ -15,7 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic letter number generation
 - Letter types endpoint: `GET /api/v1/letters/types`
 
-## [0.2.0] - 2026-07-19
+## [0.4.0-beta] - 2026-07-19
+
+### Added
+- Frontend MVP (Next.js) with authentication flow
+- Login page at `/login`
+- Dashboard with KPI cards
+- Citizens list page at `/citizens`
+- Letters list page at `/letters`
+- Badge UI component
+- API integration with JWT refresh handling
+- End-to-end testing checklist (TESTING.md)
+
+## [0.2.0]
 
 ### Added
 - Citizen Management module

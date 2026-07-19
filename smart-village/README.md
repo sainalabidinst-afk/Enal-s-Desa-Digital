@@ -6,6 +6,20 @@ Aplikasi Smart Village berbasis Web dan Mobile untuk Pemerintah Desa dan Polsek.
 
 Target: **1 desa berhasil** dalam 2-3 bulan.
 
+## Status Milestones
+
+### ✅ Milestone 1 — Backend Foundation
+COMPLETE - Auth, User, Dashboard, Citizen, Family Card, Letter Service
+
+### ✅ Milestone 2 — Frontend MVP  
+COMPLETE - Login, Dashboard, Citizen List, Letter List
+
+### 🎯 Milestone 3 — End-to-End Validation
+Belum dimulai - Testing, Performance, Backup/Restore, Deployment Trial
+
+### 🎯 Milestone 4 — Internal Beta (v0.4.0-beta)
+Menunggu Milestone 3 selesai
+
 ## Arsitektur
 
 ```
@@ -158,3 +172,21 @@ apps/web-admin/
 ```
 
 Run frontend: `npm run dev` (di `apps/web-admin`)
+
+## Docker Deployment
+
+```bash
+# Build and run all services
+docker compose up --build
+
+# Or with npm
+npm run docker:up
+
+# Stop
+docker compose down
+```
+
+Containers:
+- `smartvillage-postgres` (PostgreSQL 16)
+- `smartvillage-backend` (NestJS API on :3001)
+- `smartvillage-frontend` (Next.js on :3000)
