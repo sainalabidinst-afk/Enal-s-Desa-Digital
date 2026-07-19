@@ -13,8 +13,6 @@ export class UserService {
         email: true,
         phone: true,
         isActive: true,
-        role: { select: { name: true, slug: true } },
-        village: { select: { name: true } },
         createdAt: true,
       },
     });
@@ -29,9 +27,6 @@ export class UserService {
         email: true,
         phone: true,
         isActive: true,
-        isVerified: true,
-        role: { select: { name: true, slug: true } },
-        village: { select: { name: true } },
         createdAt: true,
         updatedAt: true,
       },
@@ -40,7 +35,7 @@ export class UserService {
     return user;
   }
 
-  async create(data: { name: string; email?: string; phone?: string; password: string; roleId: string; villageId?: string }) {
+  async create(data: { name: string; email?: string; phone?: string; password: string; roleId: string }) {
     return this.prisma.user.create({
       data: {
         name: data.name,
@@ -48,14 +43,14 @@ export class UserService {
         phone: data.phone,
         password: data.password,
         roleId: data.roleId,
-        villageId: data.villageId,
       },
       select: {
         id: true,
         name: true,
         email: true,
         phone: true,
-        role: { select: { name: true, slug: true } },
+        isActive: true,
+        createdAt: true,
       },
     });
   }
@@ -70,7 +65,7 @@ export class UserService {
         email: true,
         phone: true,
         isActive: true,
-        role: { select: { name: true, slug: true } },
+        createdAt: true,
       },
     });
   }
@@ -80,6 +75,6 @@ export class UserService {
       where: { id },
       data: { deletedAt: new Date() },
     });
-    return { success: true, message: 'User deleted' };
+    return { success: true };
   }
 }

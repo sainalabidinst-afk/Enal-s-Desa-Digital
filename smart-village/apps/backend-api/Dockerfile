@@ -2,6 +2,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+RUN apk add --no-cache openssl libc6-compat
+
 COPY package*.json ./
 COPY turbo.json ./
 COPY apps/backend-api/package*.json ./apps/backend-api/
@@ -18,6 +20,8 @@ RUN npm run build
 FROM node:20-alpine AS runner
 
 WORKDIR /app
+
+RUN apk add --no-cache openssl libc6-compat
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/backend-api/node_modules ./node_modules

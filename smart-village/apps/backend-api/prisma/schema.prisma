@@ -7,49 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================================
-// CORE: VILLAGE
-// ============================================================
-
 model Village {
-  id          String   @id @default(uuidv7())
-  code        String   @unique @db.VarChar(10)
-  name        String   @db.VarChar(100)
-  district    String   @db.VarChar(100)
-  city        String   @db.VarChar(100)
-  province    String   @db.VarChar(100)
-  postalCode  String?  @db.VarChar(5)
-  headName    String?  @db.VarChar(255)
-  headPhone   String?  @db.VarChar(20)
-  address     String?  @db.Text
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
-
-  users      User[]
-  citizens   Citizen[]
-  familyCards FamilyCard[]
-  letters    Letter[]
-  complaints Complaint[]
-  assets     Asset[]
-  news       News[]
-  events     Event[]
-  notifications Notification[]
-  auditLogs  AuditLog[]
+  id         String   @id @default(uuid())
+  code       String   @unique @db.VarChar(10)
+  name       String   @db.VarChar(100)
+  district   String   @db.VarChar(100)
+  headName   String?  @db.VarChar(255)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
 
   @@map("villages")
 }
 
-// ============================================================
-// CORE: AUTH & RBAC
-// ============================================================
-
 model Role {
-  id          String   @id @default(uuidv7())
+  id          String   @id @default(uuid())
   name        String   @unique @db.VarChar(50)
   slug        String   @unique @db.VarChar(50)
-  description String?  @db.Text
   isSystem    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -62,12 +36,12 @@ model Role {
 }
 
 model Permission {
-  id          String   @id @default(uuidv7())
+  id          String   @id @default(uuid())
   name        String   @db.VarChar(100)
   slug        String   @unique @db.VarChar(100)
   resource    String   @db.VarChar(50)
   action      String   @db.VarChar(50)
-  description String?  @db.Text
+  createdAt   DateTime @default(now())
 
   roles RolePermission[]
 
@@ -75,7 +49,7 @@ model Permission {
 }
 
 model RolePermission {
-  id           String   @id @default(uuidv7())
+  id           String   @id @default(uuid())
   roleId       String
   permissionId String
   createdAt    DateTime @default(now())
@@ -88,293 +62,116 @@ model RolePermission {
 }
 
 model User {
-  id           String    @id @default(uuidv7())
+  id           String    @id @default(uuid())
   email        String?   @unique @db.VarChar(255)
   phone        String?   @unique @db.VarChar(20)
   password     String?   @db.VarChar(255)
   name         String    @db.VarChar(255)
   nik          String?   @unique @db.VarChar(16)
-  photo        String?   @db.VarChar(255)
   isActive     Boolean   @default(true)
-  isVerified   Boolean   @default(false)
-  lastLoginAt  DateTime?
   roleId       String
-  villageId    String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
-  role          Role       @relation(fields: [roleId], references: [id])
-  village       Village?   @relation(fields: [villageId], references: [id])
-  refreshTokens RefreshToken[]
-  notifications Notification[]
-  auditLogs     AuditLog[]
-  submittedLetters  Letter[]   @relation("LetterSubmittedBy")
-  approvedLetters   Letter[]   @relation("LetterApprovedBy")
-  submittedComplaints Complaint[] @relation("ComplaintSubmittedBy")
-  resolvedComplaints  Complaint[] @relation("ComplaintResolvedBy")
+  role Role @relation(fields: [roleId], references: [id])
 
-  @@index([villageId])
   @@index([roleId])
   @@map("users")
 }
 
-model RefreshToken {
-  id        String   @id @default(uuidv7())
-  token     String   @unique @db.VarChar(500)
-  expiresAt DateTime
-  revoked   Boolean  @default(false)
-  userId    String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("refresh_tokens")
-}
-
-// ============================================================
-// MODULE: CITIZEN
-// ============================================================
-
 model FamilyCard {
-  id        String   @id @default(uuidv7())
+  id        String   @id @default(uuid())
   nkk       String   @unique @db.VarChar(16)
   headName  String   @db.VarChar(255)
   address   String   @db.Text
   rt        String   @db.VarChar(3)
   rw        String   @db.VarChar(3)
-  hamlet    String?  @db.VarChar(100)
   villageId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
-
-  village  Village   @relation(fields: [villageId], references: [id])
-  citizens Citizen[]
 
   @@index([villageId])
   @@map("family_cards")
 }
 
 model Citizen {
-  id           String   @id @default(uuidv7())
-  villageId    String
-  nik          String   @unique @db.VarChar(16)
-  name         String   @db.VarChar(255)
-  placeOfBirth String   @db.VarChar(100)
-  dateOfBirth  DateTime @db.Date
-  gender       Gender
-  address      String   @db.Text
-  rt           String   @db.VarChar(3)
-  rw           String   @db.VarChar(3)
-  hamlet       String?  @db.VarChar(100)
-  religion     String   @db.VarChar(50)
-  maritalStatus String  @db.VarChar(50)
-  occupation   String?  @db.VarChar(100)
-  education    String?  @db.VarChar(50)
-  familyCardId String?
-  photo        String?  @db.VarChar(255)
-  userId       String?  @unique
-  isAlive      Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  deletedAt    DateTime?
-
-  village   Village    @relation(fields: [villageId], references: [id])
-  familyCard FamilyCard? @relation(fields: [familyCardId], references: [id])
-
-  @@index([nik])
-  @@index([villageId])
-  @@map("citizens")
-}
-
-// ============================================================
-// MODULE: LETTER
-// ============================================================
-
-model LetterType {
-  id             String   @id @default(uuidv7())
-  code           String   @unique @db.VarChar(50)
-  name           String   @db.VarChar(255)
-  description    String?  @db.Text
-  isActive       Boolean  @default(true)
-  requiresApproval Boolean @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  deletedAt      DateTime?
-
-  letters Letter[]
-
-  @@map("letter_types")
-}
-
-model Letter {
-  id            String      @id @default(uuidv7())
-  villageId     String
-  letterNumber  String      @unique @db.VarChar(50)
-  citizenId     String
-  letterTypeId  String
-  subject       String      @db.VarChar(255)
-  content       String?     @db.Text
-  status        LetterStatus @default(PENDING)
-  validUntil    DateTime?
-  pdfUrl        String?     @db.VarChar(255)
-  notes         String?     @db.Text
-  submittedBy   String
-  approvedBy    String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  deletedAt     DateTime?
-
-  village    Village    @relation(fields: [villageId], references: [id])
-  citizen    Citizen    @relation(fields: [citizenId], references: [id])
-  letterType LetterType @relation(fields: [letterTypeId], references: [id])
-  submitter  User       @relation("LetterSubmittedBy", fields: [submittedBy], references: [id])
-  approver   User?      @relation("LetterApprovedBy", fields: [approvedBy], references: [id])
-
-  @@index([villageId, status])
-  @@map("letters")
-}
-
-// ============================================================
-// MODULE: COMPLAINT
-// ============================================================
-
-model Complaint {
-  id             String           @id @default(uuidv7())
-  villageId      String
-  trackingNumber String           @unique @db.VarChar(50)
-  category       ComplaintCategory
-  subject        String           @db.VarChar(255)
-  description    String           @db.Text
-  status         ComplaintStatus  @default(PENDING)
-  photos         String[]         @default([])
-  assignedTo     String?
-  resolvedAt     DateTime?
-  resolvedBy     String?
-  resolution     String?          @db.Text
-  submittedBy    String
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  deletedAt      DateTime?
-
-  village  Village  @relation(fields: [villageId], references: [id])
-  submitter User    @relation("ComplaintSubmittedBy", fields: [submittedBy], references: [id])
-  resolver  User?    @relation("ComplaintResolvedBy", fields: [resolvedBy], references: [id])
-
-  @@index([villageId, status])
-  @@map("complaints")
-}
-
-// ============================================================
-// MODULE: ASSET
-// ============================================================
-
-model Asset {
-  id          String   @id @default(uuidv7())
+  id          String   @id @default(uuid())
   villageId   String
-  code        String   @unique @db.VarChar(50)
+  nik         String   @unique @db.VarChar(16)
   name        String   @db.VarChar(255)
-  category    String   @db.VarChar(100)
-  condition   String   @db.VarChar(50)
-  purchaseDate DateTime?
-  purchasePrice Decimal? @db.Decimal(12, 2)
-  location    String?  @db.VarChar(255)
-  photo       String?  @db.VarChar(255)
-  isActive    Boolean  @default(true)
-  notes       String?  @db.Text
+  dateOfBirth DateTime @db.Date
+  gender      Gender
+  address     String   @db.Text
+  rt          String   @db.VarChar(3)
+  rw          String   @db.VarChar(3)
+  religion    String   @db.VarChar(50)
+  isAlive     Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deletedAt   DateTime?
 
-  @@index([villageId])
-  @@map("assets")
+  @@index([nik])
+  @@map("citizens")
 }
 
-// ============================================================
-// MODULE: NEWS & EVENT
-// ============================================================
+model LetterType {
+  id             String   @id @default(uuid())
+  code           String   @unique @db.VarChar(50)
+  name           String   @db.VarChar(255)
+  requiresApproval Boolean @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+}
 
-model News {
-  id        String   @id @default(uuidv7())
+model Letter {
+  id           String      @id @default(uuid())
+  villageId    String
+  letterNumber String      @unique @db.VarChar(50)
+  citizenId    String
+  letterTypeId String
+  subject      String      @db.VarChar(255)
+  content      String?     @db.Text
+  status       LetterStatus @default(PENDING)
+  pdfUrl       String?     @db.VarChar(255)
+  submittedBy  String
+  approvedBy   String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+}
+
+model Complaint {
+  id             String          @id @default(uuid())
+  villageId      String
+  trackingNumber String          @unique @db.VarChar(50)
+  category       ComplaintCategory
+  subject        String          @db.VarChar(255)
+  description    String          @db.Text
+  status         ComplaintStatus @default(PENDING)
+  submittedBy    String
+  resolvedBy     String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+}
+
+model Asset {
+  id        String   @id @default(uuid())
   villageId String
-  title     String   @db.VarChar(255)
-  content   String   @db.Text
-  summary   String?  @db.Text
-  thumbnail String?  @db.VarChar(255)
-  author    String   @db.VarChar(255)
-  isPublished Boolean @default(true)
-  publishedAt DateTime?
+  code      String   @unique @db.VarChar(50)
+  name      String   @db.VarChar(255)
+  category  String   @db.VarChar(100)
+  condition String   @db.VarChar(50)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
 
   @@index([villageId])
-  @@map("news")
+  @@map("assets")
 }
-
-model Event {
-  id          String   @id @default(uuidv7())
-  villageId   String
-  title       String   @db.VarChar(255)
-  description String?  @db.Text
-  startDate   DateTime
-  endDate     DateTime?
-  location    String?  @db.VarChar(255)
-  thumbnail   String?  @db.VarChar(255)
-  isPublic    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
-
-  @@index([villageId])
-  @@map("events")
-}
-
-// ============================================================
-// MODULE: NOTIFICATION
-// ============================================================
-
-model Notification {
-  id        String   @id @default(uuidv7())
-  userId    String
-  title     String   @db.VarChar(255)
-  body      String   @db.Text
-  type      String   @db.VarChar(50)
-  isRead    Boolean  @default(false)
-  readAt    DateTime?
-  createdAt DateTime @default(now())
-  deletedAt DateTime?
-
-  @@index([userId])
-  @@index([isRead])
-  @@map("notifications")
-}
-
-// ============================================================
-// MODULE: AUDIT LOG
-// ============================================================
-
-model AuditLog {
-  id         String   @id @default(uuidv7())
-  villageId  String?
-  userId     String
-  action     String   @db.VarChar(50)
-  resource   String   @db.VarChar(50)
-  resourceId String?  @db.VarChar(50)
-  description String?  @db.Text
-  createdAt  DateTime @default(now())
-
-  @@index([villageId])
-  @@index([userId])
-  @@index([resource])
-  @@map("audit_logs")
-}
-
-// ============================================================
-// ENUMS
-// ============================================================
 
 enum Gender {
   LAKI_LAKI
