@@ -1,12 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { prisma } from '../../core/prisma/prisma.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
-
   async findAll() {
-    return this.prisma.user.findMany({
+    return prisma.user.findMany({
       select: {
         id: true,
         name: true,
@@ -19,7 +17,7 @@ export class UserService {
   }
 
   async findOne(id: string) {
-    const user = await this.prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -36,7 +34,7 @@ export class UserService {
   }
 
   async create(data: { name: string; email?: string; phone?: string; password: string; roleId: string }) {
-    return this.prisma.user.create({
+    return prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
@@ -56,7 +54,7 @@ export class UserService {
   }
 
   async update(id: string, data: { name?: string; email?: string; phone?: string; roleId?: string; isActive?: boolean }) {
-    return this.prisma.user.update({
+    return prisma.user.update({
       where: { id },
       data,
       select: {
@@ -71,7 +69,7 @@ export class UserService {
   }
 
   async remove(id: string) {
-    await this.prisma.user.update({
+    await prisma.user.update({
       where: { id },
       data: { deletedAt: new Date() },
     });

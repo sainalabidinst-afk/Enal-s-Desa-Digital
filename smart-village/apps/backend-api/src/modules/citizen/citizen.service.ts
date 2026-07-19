@@ -1,15 +1,13 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
+import { prisma } from '../../core/prisma/prisma.service';
 import { CreateCitizenDto } from './dto/create-citizen.dto';
 import { UpdateCitizenDto } from './dto/update-citizen.dto';
 import { QueryCitizenDto } from './dto/query-citizen.dto';
 
 @Injectable()
 export class CitizenService {
-  constructor(private readonly prisma: PrismaService) {}
-
   async create(createCitizenDto: CreateCitizenDto) {
-    const existingNIK = await this.prisma.citizen.findFirst({
+    const existingNIK = await prisma.citizen.findFirst({
       where: { nik: createCitizenDto.nik, deletedAt: null },
     });
 
@@ -17,7 +15,7 @@ export class CitizenService {
       throw new ConflictException('NIK already exists');
     }
 
-    const citizen = await this.prisma.citizen.create({
+    const citizen = await prisma.citizen.create({
       data: {
         ...createCitizenDto,
         dateOfBirth: new Date(createCitizenDto.dateOfBirth),
@@ -63,15 +61,14 @@ export class CitizenService {
       where.isAlive = query.isAlive;
     }
 
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.citizen.findMany({
+    const [data, total] = await prisma.$transaction([
+      prisma.citizen.findMany({
         where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { familyCard: { select: { nkk: true, headName: true } } },
       }),
-      this.prisma.citizen.count({ where }),
+      prisma.citizen.count({ where }),
     ]);
 
     return {
@@ -88,9 +85,8 @@ export class CitizenService {
   }
 
   async findOne(id: string) {
-    const citizen = await this.prisma.citizen.findFirst({
+    const citizen = await prisma.citizen.findFirst({
       where: { id, deletedAt: null },
-      include: { familyCard: true },
     });
 
     if (!citizen) {
@@ -104,7 +100,7 @@ export class CitizenService {
   }
 
   async findByNIK(nik: string) {
-    const citizen = await this.prisma.citizen.findFirst({
+    const citizen = await prisma.citizen.findFirst({
       where: { nik, deletedAt: null },
     });
 
@@ -119,7 +115,7 @@ export class CitizenService {
   }
 
   async update(id: string, updateCitizenDto: UpdateCitizenDto) {
-    const citizen = await this.prisma.citizen.findFirst({
+    const citizen = await prisma.citizen.findFirst({
       where: { id, deletedAt: null },
     });
 
@@ -128,7 +124,7 @@ export class CitizenService {
     }
 
     if (updateCitizenDto.nik && updateCitizenDto.nik !== citizen.nik) {
-      const existingNIK = await this.prisma.citizen.findFirst({
+      const existingNIK = await prisma.citizen.findFirst({
         where: { nik: updateCitizenDto.nik, deletedAt: null },
       });
 
@@ -145,7 +141,7 @@ export class CitizenService {
       data.deathDate = new Date(data.deathDate);
     }
 
-    const updated = await this.prisma.citizen.update({
+    const updated = await prisma.citizen.update({
       where: { id },
       data,
     });
@@ -158,7 +154,7 @@ export class CitizenService {
   }
 
   async remove(id: string) {
-    const citizen = await this.prisma.citizen.findFirst({
+    const citizen = await prisma.citizen.findFirst({
       where: { id, deletedAt: null },
     });
 
@@ -166,7 +162,7 @@ export class CitizenService {
       throw new NotFoundException('Citizen not found');
     }
 
-    await this.prisma.citizen.update({
+    await prisma.citizen.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
@@ -178,13 +174,13 @@ export class CitizenService {
   }
 
   async getStats() {
-    const [total, male, female] = await this.prisma.$transaction([
-      this.prisma.citizen.count({ where: { deletedAt: null } }),
-      this.prisma.citizen.count({ where: { gender: 'LAKI_LAKI', isAlive: true, deletedAt: null } }),
-      this.prisma.citizen.count({ where: { gender: 'PEREMPUAN', isAlive: true, deletedAt: null } }),
+    const [total, male, female] = await prisma.$transaction([
+      prisma.citizen.count({ where: { deletedAt: null } }),
+      prisma.citizen.count({ where: { gender: 'LAKI_LAKI', isAlive: true, deletedAt: null } }),
+      prisma.citizen.count({ where: { gender: 'PEREMPUAN', isAlive: true, deletedAt: null } }),
     ]);
 
-    const productive = await this.prisma.citizen.count({
+    const productive = await prisma.citizen.count({
       where: {
         isAlive: true,
         deletedAt: null,

@@ -1,19 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
+import { prisma } from '../../core/prisma/prisma.service';
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly prisma: PrismaService) {}
-
   async getOverview() {
     const [totalCitizens, totalLetters, totalComplaints, pendingLetters, pendingComplaints, totalAssets] =
-      await this.prisma.$transaction([
-        this.prisma.citizen.count({ where: { deletedAt: null } }),
-        this.prisma.letter.count({ where: { deletedAt: null } }),
-        this.prisma.complaint.count({ where: { deletedAt: null } }),
-        this.prisma.letter.count({ where: { status: 'PENDING', deletedAt: null } }),
-        this.prisma.complaint.count({ where: { status: 'PENDING', deletedAt: null } }),
-        this.prisma.asset.count({ where: { deletedAt: null } }),
+      await prisma.$transaction([
+        prisma.citizen.count({ where: { deletedAt: null } }),
+        prisma.letter.count({ where: { deletedAt: null } }),
+        prisma.complaint.count({ where: { deletedAt: null } }),
+        prisma.letter.count({ where: { status: 'PENDING', deletedAt: null } }),
+        prisma.complaint.count({ where: { status: 'PENDING', deletedAt: null } }),
+        prisma.asset.count({ where: { deletedAt: null } }),
       ]);
 
     return {
@@ -30,19 +28,19 @@ export class DashboardService {
   }
 
   async getStats() {
-    const citizenStats = await this.prisma.citizen.groupBy({
+    const citizenStats = await prisma.citizen.groupBy({
       by: ['gender'],
       where: { deletedAt: null },
       _count: { id: true },
     });
 
-    const letterStats = await this.prisma.letter.groupBy({
+    const letterStats = await prisma.letter.groupBy({
       by: ['status'],
       where: { deletedAt: null },
       _count: { id: true },
     });
 
-    const complaintStats = await this.prisma.complaint.groupBy({
+    const complaintStats = await prisma.complaint.groupBy({
       by: ['status'],
       where: { deletedAt: null },
       _count: { id: true },

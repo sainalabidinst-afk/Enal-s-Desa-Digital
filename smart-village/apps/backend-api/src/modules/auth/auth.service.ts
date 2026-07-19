@@ -2,18 +2,17 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
-import { PrismaService } from '../../core/prisma/prisma.service';
+import { prisma } from '../../core/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
   async validateUser(emailOrPhone: string, password: string) {
-    const user = await (this.prisma.user as any).findFirst({
+    const user = await prisma.user.findFirst({
       where: {
         OR: [
           { email: emailOrPhone },
@@ -36,12 +35,12 @@ export class AuthService {
       throw new UnauthorizedException('Account is disabled');
     }
 
-    await this.prisma.user.update({
+    await prisma.user.update({
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
 
-    const { password: _, refreshTokens, ...result } = user;
+    const { password: _, ...result } = user;
     return result;
   }
 
@@ -62,7 +61,7 @@ export class AuthService {
       },
     );
 
-    await this.prisma.refreshToken.create({
+    await prisma.refreshToken.create({
       data: {
         token: refreshToken,
         userId: user.id,
@@ -70,14 +69,13 @@ export class AuthService {
       },
     });
 
-    await this.prisma.auditLog.create({
+    await prisma.auditLog.create({
       data: {
         userId: user.id,
         action: 'LOGIN',
         resource: 'auth',
-        description: 'User logged in',
-        ipAddress: undefined,
-        userAgent: undefined,
+        resourceId: user.id,
+        details: JSON.stringify({ description: 'User logged in' }),
       },
     });
 
@@ -104,7 +102,7 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
 
-      const storedToken = await this.prisma.refreshToken.findFirst({
+      const storedToken = await prisma.refreshToken.findFirst({
         where: {
           token,
           userId: payload.sub,
@@ -117,7 +115,7 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      const user = await (this.prisma.user as any).findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: payload.sub },
         include: { role: { include: { permissions: true } } },
       });
@@ -144,7 +142,7 @@ export class AuthService {
   }
 
   async logout(token: string) {
-    await this.prisma.refreshToken.updateMany({
+    await prisma.refreshToken.updateMany({
       where: { token },
       data: { revoked: true },
     });
@@ -161,7 +159,7 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
 
-      const storedToken = await this.prisma.refreshToken.findFirst({
+      const storedToken = await prisma.refreshToken.findFirst({
         where: {
           token,
           userId: payload.sub,

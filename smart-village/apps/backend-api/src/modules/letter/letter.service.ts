@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
+import { prisma } from '../../core/prisma/prisma.service';
 
 export enum LetterStatus {
   PENDING = 'PENDING',
@@ -12,19 +12,17 @@ export enum LetterStatus {
 
 @Injectable()
 export class LetterService {
-  constructor(private readonly prisma: PrismaService) {}
-
   async create(data: { citizenId: string; letterTypeId: string; subject: string; content?: string }, userId: string) {
-    const letterType = await this.prisma.letterType.findFirst({
-      where: { id: data.letterTypeId, deletedAt: null },
+    const letterType = await prisma.letterType.findFirst({
+      where: { id: data.letterTypeId },
     });
 
     if (!letterType) {
       throw new BadRequestException('Invalid letter type');
     }
 
-    const citizen = await this.prisma.citizen.findFirst({
-      where: { id: data.citizenId, deletedAt: null },
+    const citizen = await prisma.citizen.findFirst({
+      where: { id: data.citizenId },
     });
 
     if (!citizen) {
@@ -33,13 +31,13 @@ export class LetterService {
 
     const letterNumber = await this.generateLetterNumber();
 
-    const letter = await this.prisma.letter.create({
+    const letter = await prisma.letter.create({
       data: {
         ...data,
         letterNumber,
         submittedBy: userId,
         status: LetterStatus.PENDING,
-        villageId: citizen.villageId || undefined,
+        villageId: citizen.villageId,
       },
     });
 
@@ -72,19 +70,14 @@ export class LetterService {
       where.citizenId = params.citizenId;
     }
 
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.letter.findMany({
+    const [data, total] = await prisma.$transaction([
+      prisma.letter.findMany({
         where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: {
-          citizen: { select: { name: true, nik: true } },
-          letterType: { select: { name: true, code: true } },
-          submitter: { select: { name: true } },
-        },
       }),
-      this.prisma.letter.count({ where }),
+      prisma.letter.count({ where }),
     ]);
 
     return {
@@ -101,14 +94,8 @@ export class LetterService {
   }
 
   async findOne(id: string) {
-    const letter = await this.prisma.letter.findFirst({
+    const letter = await prisma.letter.findFirst({
       where: { id, deletedAt: null },
-      include: {
-        citizen: true,
-        letterType: true,
-        submitter: { select: { name: true } },
-        approver: { select: { name: true } },
-      },
     });
 
     if (!letter) {
@@ -122,13 +109,13 @@ export class LetterService {
   }
 
   async updateStatus(id: string, status: LetterStatus, userId: string) {
-    const letter = await this.prisma.letter.findFirst({ where: { id, deletedAt: null } });
+    const letter = await prisma.letter.findFirst({ where: { id, deletedAt: null } });
 
     if (!letter) {
       throw new NotFoundException('Letter not found');
     }
 
-    const updated = await this.prisma.letter.update({
+    const updated = await prisma.letter.update({
       where: { id },
       data: { status, approvedBy: status === LetterStatus.APPROVED ? userId : undefined, signedAt: status === LetterStatus.SIGNED ? new Date() : undefined },
     });
@@ -141,13 +128,13 @@ export class LetterService {
   }
 
   async update(id: string, data: { subject?: string; content?: string }, userId: string) {
-    const letter = await this.prisma.letter.findFirst({ where: { id, deletedAt: null } });
+    const letter = await prisma.letter.findFirst({ where: { id, deletedAt: null } });
 
     if (!letter) {
       throw new NotFoundException('Letter not found');
     }
 
-    const updated = await this.prisma.letter.update({
+    const updated = await prisma.letter.update({
       where: { id },
       data,
     });
@@ -160,13 +147,13 @@ export class LetterService {
   }
 
   async remove(id: string) {
-    const letter = await this.prisma.letter.findFirst({ where: { id, deletedAt: null } });
+    const letter = await prisma.letter.findFirst({ where: { id, deletedAt: null } });
 
     if (!letter) {
       throw new NotFoundException('Letter not found');
     }
 
-    await this.prisma.letter.update({
+    await prisma.letter.update({
       where: { id },
       data: { deletedAt: new Date() },
     });
@@ -178,7 +165,7 @@ export class LetterService {
   }
 
   async getLetterTypes() {
-    const letterTypes = await this.prisma.letterType.findMany({
+    const letterTypes = await prisma.letterType.findMany({
       where: { deletedAt: null },
       orderBy: { name: 'asc' },
     });
@@ -191,7 +178,7 @@ export class LetterService {
 
   private async generateLetterNumber(): Promise<string> {
     const currentYear = new Date().getFullYear();
-    const count = await this.prisma.letter.count({ where: { deletedAt: null } });
+    const count = await prisma.letter.count({ where: { deletedAt: null } });
     const sequence = String(count + 1).padStart(4, '0');
     return `${sequence}/${currentYear}`;
   }

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../core/prisma/prisma.service';
+import { prisma } from '../../core/prisma/prisma.service';
 
 export enum ComplaintStatus {
   PENDING = 'PENDING',
@@ -26,10 +26,8 @@ export enum ComplaintCategory {
 
 @Injectable()
 export class ComplaintService {
-  constructor(private readonly prisma: PrismaService) {}
-
   async create(data: { citizenId: string; category: ComplaintCategory; subject: string; description: string }, userId: string) {
-    const citizen = await this.prisma.citizen.findFirst({
+    const citizen = await prisma.citizen.findFirst({
       where: { id: data.citizenId, deletedAt: null },
     });
 
@@ -39,13 +37,13 @@ export class ComplaintService {
 
     const trackingNumber = this.generateTrackingNumber();
 
-    const complaint = await this.prisma.complaint.create({
+    const complaint = await prisma.complaint.create({
       data: {
         ...data,
         trackingNumber,
         submittedBy: userId,
         status: ComplaintStatus.PENDING,
-        villageId: citizen.villageId || undefined,
+        villageId: citizen.villageId,
       },
     });
 
@@ -74,14 +72,14 @@ export class ComplaintService {
       where.status = params.status;
     }
 
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.complaint.findMany({
+    const [data, total] = await prisma.$transaction([
+      prisma.complaint.findMany({
         where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.complaint.count({ where }),
+      prisma.complaint.count({ where }),
     ]);
 
     return {
@@ -98,7 +96,7 @@ export class ComplaintService {
   }
 
   async findOne(id: string) {
-    const complaint = await this.prisma.complaint.findFirst({
+    const complaint = await prisma.complaint.findFirst({
       where: { id, deletedAt: null },
     });
 
@@ -113,13 +111,13 @@ export class ComplaintService {
   }
 
   async updateStatus(id: string, status: ComplaintStatus, userId: string) {
-    const complaint = await this.prisma.complaint.findFirst({ where: { id, deletedAt: null } });
+    const complaint = await prisma.complaint.findFirst({ where: { id, deletedAt: null } });
 
     if (!complaint) {
       throw new NotFoundException('Complaint not found');
     }
 
-    const updated = await this.prisma.complaint.update({
+    const updated = await prisma.complaint.update({
       where: { id },
       data: { status, resolvedAt: [ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED].includes(status) ? new Date() : undefined, resolvedBy: [ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED].includes(status) ? userId : undefined },
     });
@@ -132,13 +130,13 @@ export class ComplaintService {
   }
 
   async remove(id: string) {
-    const complaint = await this.prisma.complaint.findFirst({ where: { id, deletedAt: null } });
+    const complaint = await prisma.complaint.findFirst({ where: { id, deletedAt: null } });
 
     if (!complaint) {
       throw new NotFoundException('Complaint not found');
     }
 
-    await this.prisma.complaint.update({
+    await prisma.complaint.update({
       where: { id },
       data: { deletedAt: new Date() },
     });

@@ -70,11 +70,15 @@ model User {
   nik          String?   @unique @db.VarChar(16)
   isActive     Boolean   @default(true)
   roleId       String
+  lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
   role Role @relation(fields: [roleId], references: [id])
+  refreshTokens RefreshToken[]
+  submittedLetters Letter[] @relation("LetterSubmitter")
+  approvedLetters Letter[] @relation("LetterApprover")
 
   @@index([roleId])
   @@map("users")
@@ -92,25 +96,31 @@ model FamilyCard {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
 
+  citizens Citizen[]
+
   @@index([villageId])
   @@map("family_cards")
 }
 
 model Citizen {
-  id          String   @id @default(uuid())
-  villageId   String
-  nik         String   @unique @db.VarChar(16)
-  name        String   @db.VarChar(255)
-  dateOfBirth DateTime @db.Date
-  gender      Gender
-  address     String   @db.Text
-  rt          String   @db.VarChar(3)
-  rw          String   @db.VarChar(3)
-  religion    String   @db.VarChar(50)
-  isAlive     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  id           String    @id @default(uuid())
+  villageId    String
+  familyCardId String?
+  nik          String    @unique @db.VarChar(16)
+  name         String    @db.VarChar(255)
+  dateOfBirth  DateTime  @db.Date
+  gender       Gender
+  address      String    @db.Text
+  rt           String    @db.VarChar(3)
+  rw           String    @db.VarChar(3)
+  religion     String    @db.VarChar(50)
+  isAlive      Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  familyCard FamilyCard? @relation(fields: [familyCardId], references: [id])
+  letters Letter[]
 
   @@index([nik])
   @@map("citizens")
@@ -124,23 +134,38 @@ model LetterType {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   deletedAt      DateTime?
+
+  letters Letter[]
+
+  @@map("letter_types")
 }
 
 model Letter {
-  id           String      @id @default(uuid())
+  id           String       @id @default(uuid())
   villageId    String
-  letterNumber String      @unique @db.VarChar(50)
+  letterNumber String       @unique @db.VarChar(50)
   citizenId    String
   letterTypeId String
-  subject      String      @db.VarChar(255)
-  content      String?     @db.Text
+  subject      String       @db.VarChar(255)
+  content      String?      @db.Text
   status       LetterStatus @default(PENDING)
-  pdfUrl       String?     @db.VarChar(255)
+  pdfUrl       String?      @db.VarChar(255)
   submittedBy  String
   approvedBy   String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  signedAt     DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   deletedAt    DateTime?
+
+  citizen    Citizen    @relation(fields: [citizenId], references: [id])
+  letterType LetterType @relation(fields: [letterTypeId], references: [id])
+  submitter  User       @relation("LetterSubmitter", fields: [submittedBy], references: [id])
+  approver   User?      @relation("LetterApprover", fields: [approvedBy], references: [id])
+
+  @@index([villageId])
+  @@index([citizenId])
+  @@index([letterTypeId])
+  @@map("letters")
 }
 
 model Complaint {
@@ -153,9 +178,39 @@ model Complaint {
   status         ComplaintStatus @default(PENDING)
   submittedBy    String
   resolvedBy     String?
+  resolvedAt     DateTime?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   deletedAt      DateTime?
+
+  @@index([villageId])
+  @@map("complaints")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String   @db.VarChar(50)
+  resource  String   @db.VarChar(100)
+  resourceId String?
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
 }
 
 model Asset {

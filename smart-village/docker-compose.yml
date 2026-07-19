@@ -20,11 +20,8 @@ services:
     image: node:20-bullseye
     container_name: smartvillage-backend
     working_dir: /app
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://smartvillage:smartvillage123@postgres:5432/smart_village
-      JWT_SECRET: your-jwt-secret-key-minimum-32-chars
-      JWT_REFRESH_SECRET: your-refresh-secret-key-minimum-32-chars
+    env_file:
+      - ./apps/backend-api/.env.development
     ports:
       - '3001:3001'
     depends_on:
@@ -32,8 +29,7 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/backend-api:/app
-      - /app/node_modules
-    command: sh -c "npm install && npx prisma migrate dev --name init --skip-seed && npm run dev"
+    command: sh -c "npm install && npx prisma generate && npx prisma migrate dev --name init --skip-seed && npm run dev"
 
   frontend:
     image: node:20-alpine
@@ -41,15 +37,15 @@ services:
     working_dir: /app/apps/web-admin
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
-    command: sh -c "npm install && npm run dev"
+    env_file:
+      - ./apps/web-admin/.env.local
     volumes:
       - ./apps/web-admin:/app/apps/web-admin
-      - /app/apps/web-admin/node_modules
     ports:
       - '3000:3000'
     depends_on:
       - backend
+    command: sh -c "npm install && npm run dev"
 
 volumes:
   postgres_data:
