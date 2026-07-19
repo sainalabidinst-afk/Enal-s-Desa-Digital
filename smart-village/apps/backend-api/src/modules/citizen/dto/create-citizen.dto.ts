@@ -1,13 +1,11 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, IsBoolean, Matches, Length, IsEmail } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Gender } from '../../../shared/enums/citizen.enum';
+import { Gender } from '@prisma/client';
 
 export class CreateCitizenDto {
   @IsString()
+  @Length(16, 16)
   nik: string;
-
-  @IsString()
-  nkk: string;
 
   @IsString()
   name: string;
@@ -29,9 +27,11 @@ export class CreateCitizenDto {
   address: string;
 
   @IsString()
+  @Length(3, 3)
   rt: string;
 
   @IsString()
+  @Length(3, 3)
   rw: string;
 
   @IsString()
@@ -92,11 +92,8 @@ export class CreateCitizenDto {
 export class UpdateCitizenDto {
   @IsOptional()
   @IsString()
+  @Length(16, 16)
   nik?: string;
-
-  @IsOptional()
-  @IsString()
-  nkk?: string;
 
   @IsOptional()
   @IsString()
@@ -124,10 +121,12 @@ export class UpdateCitizenDto {
 
   @IsOptional()
   @IsString()
+  @Length(3, 3)
   rt?: string;
 
   @IsOptional()
   @IsString()
+  @Length(3, 3)
   rw?: string;
 
   @IsOptional()
@@ -206,7 +205,7 @@ export class QueryCitizenDto {
 
   @IsOptional()
   @IsString()
-  village?: string;
+  villageId?: string;
 
   @IsOptional()
   @IsString()
@@ -229,4 +228,12 @@ export class QueryCitizenDto {
   @Type(() => Number)
   @IsNumber()
   limit?: number;
+
+  @IsOptional()
+  @IsString()
+  sortBy?: string;
+
+  @IsOptional()
+  @IsString()
+  sortOrder?: 'asc' | 'desc';
 }

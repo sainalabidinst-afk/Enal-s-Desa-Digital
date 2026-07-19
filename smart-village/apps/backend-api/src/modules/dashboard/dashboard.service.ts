@@ -6,19 +6,15 @@ export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getOverview() {
-    const [
-      totalCitizens,
-      totalLetters,
-      totalComplaints,
-      pendingLetters,
-      pendingComplaints,
-    ] = await this.prisma.$transaction([
-      this.prisma.citizen.count({ where: { deletedAt: null } }),
-      this.prisma.letter.count(),
-      this.prisma.complaint.count({ where: { deletedAt: null } }),
-      this.prisma.letter.count({ where: { status: 'PENDING' } }),
-      this.prisma.complaint.count({ where: { status: 'PENDING', deletedAt: null } }),
-    ]);
+    const [totalCitizens, totalLetters, totalComplaints, pendingLetters, pendingComplaints, totalAssets] =
+      await this.prisma.$transaction([
+        this.prisma.citizen.count({ where: { deletedAt: null } }),
+        this.prisma.letter.count({ where: { deletedAt: null } }),
+        this.prisma.complaint.count({ where: { deletedAt: null } }),
+        this.prisma.letter.count({ where: { status: 'PENDING', deletedAt: null } }),
+        this.prisma.complaint.count({ where: { status: 'PENDING', deletedAt: null } }),
+        this.prisma.asset.count({ where: { deletedAt: null } }),
+      ]);
 
     return {
       success: true,
@@ -28,6 +24,7 @@ export class DashboardService {
         totalComplaints,
         pendingLetters,
         pendingComplaints,
+        totalAssets,
       },
     };
   }
@@ -41,6 +38,7 @@ export class DashboardService {
 
     const letterStats = await this.prisma.letter.groupBy({
       by: ['status'],
+      where: { deletedAt: null },
       _count: { id: true },
     });
 

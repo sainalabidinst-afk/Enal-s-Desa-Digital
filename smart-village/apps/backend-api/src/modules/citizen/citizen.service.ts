@@ -1,9 +1,8 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { CreateCitizenDto } from './dto/create-citizen.dto';
 import { UpdateCitizenDto } from './dto/update-citizen.dto';
 import { QueryCitizenDto } from './dto/query-citizen.dto';
-import { Gender } from '../../shared/enums/citizen.enum';
 
 @Injectable()
 export class CitizenService {
@@ -21,8 +20,8 @@ export class CitizenService {
     const citizen = await this.prisma.citizen.create({
       data: {
         ...createCitizenDto,
-        qrCode: `${createCitizenDto.nik}-${Date.now()}`,
         dateOfBirth: new Date(createCitizenDto.dateOfBirth),
+        villageId: createCitizenDto.villageId,
       },
     });
 
@@ -69,7 +68,8 @@ export class CitizenService {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: query.sortBy ? { [query.sortBy]: query.sortOrder || 'desc' } : { createdAt: 'desc' },
+        include: { familyCard: { select: { nkk: true, headName: true } } },
       }),
       this.prisma.citizen.count({ where }),
     ]);
@@ -90,6 +90,7 @@ export class CitizenService {
   async findOne(id: string) {
     const citizen = await this.prisma.citizen.findFirst({
       where: { id, deletedAt: null },
+      include: { familyCard: true },
     });
 
     if (!citizen) {
@@ -179,8 +180,8 @@ export class CitizenService {
   async getStats() {
     const [total, male, female] = await this.prisma.$transaction([
       this.prisma.citizen.count({ where: { deletedAt: null } }),
-      this.prisma.citizen.count({ where: { gender: Gender.LAKI_LAKI, isAlive: true, deletedAt: null } }),
-      this.prisma.citizen.count({ where: { gender: Gender.PEREMPUAN, isAlive: true, deletedAt: null } }),
+      this.prisma.citizen.count({ where: { gender: 'LAKI_LAKI', isAlive: true, deletedAt: null } }),
+      this.prisma.citizen.count({ where: { gender: 'PEREMPUAN', isAlive: true, deletedAt: null } }),
     ]);
 
     const productive = await this.prisma.citizen.count({
@@ -188,8 +189,8 @@ export class CitizenService {
         isAlive: true,
         deletedAt: null,
         dateOfBirth: {
-          gte: new Date(new Date().setFullYear(new Date().getFullYear() - 64)).toISOString().split('T')[0],
-          lte: new Date(new Date().setFullYear(new Date().getFullYear() - 15)).toISOString().split('T')[0],
+          gte: new Date(new Date().setFullYear(new Date().getFullYear() - 64)),
+          lte: new Date(new Date().setFullYear(new Date().getFullYear() - 15)),
         },
       },
     });

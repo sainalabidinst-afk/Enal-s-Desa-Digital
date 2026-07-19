@@ -3,6 +3,43 @@ import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
+function generateNIK(index: number): string {
+  return `320101${String(index).padStart(6, '0')}0001`;
+}
+
+function generateNKK(index: number): string {
+  return `320101${String(index).padStart(6, '0')}0001`;
+}
+
+function getRandomName(): string {
+  const names = ['Budi', 'Siti', 'Ahmad', 'Rina', 'Joko', 'Dewi', 'Agus', 'Fitri', 'Hendra', 'Lina', 'Eka', 'Maya', 'Danang', 'Sari', 'Rudi', 'Yuli', 'Andi', 'Nina', 'Wahyu', 'Rosa'];
+  return names[Math.floor(Math.random() * names.length)] + ' ' + names[Math.floor(Math.random() * names.length)];
+}
+
+function getRandomGender() {
+  return Math.random() > 0.5 ? 'LAKI_LAKI' : 'PEREMPUAN';
+}
+
+function getRandomReligion() {
+  const religions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Budha', 'Konghucu'];
+  return religions[Math.floor(Math.random() * religions.length)];
+}
+
+function getRandomMaritalStatus() {
+  const statuses = ['Belum Kawin', 'Kawin', 'Cerai Hidup', 'Cerai Mati'];
+  return statuses[Math.floor(Math.random() * statuses.length)];
+}
+
+function getRandomEducation() {
+  const educations = ['SD', 'SMP', 'SMA', 'D1', 'D2', 'D3', 'S1', 'S2'];
+  return educations[Math.floor(Math.random() * educations.length)];
+}
+
+function getRandomOccupation() {
+  const occupations = ['Petani', 'Pedagang', 'PNS', 'Swasta', 'TNI/Polri', 'Wiraswasta', 'Buruh', 'Pelajar'];
+  return occupations[Math.floor(Math.random() * occupations.length)];
+}
+
 async function main() {
   console.log('🌱 Seeding database...');
 
@@ -76,23 +113,27 @@ async function main() {
     });
   }
 
-  const assignPermsToRole = async (role: { id: string }, permSlugs: string[]) => {
+  const assignPermsToRole = async (roleId: string, permSlugs: string[]) => {
     for (const slug of permSlugs) {
       const perm = allPerms.find((p) => p.slug === slug);
       if (perm) {
         await prisma.rolePermission.upsert({
-          where: { roleId_permissionId: { roleId: role.id, permissionId: perm.id } },
+          where: { roleId_permissionId: { roleId, permissionId: perm.id } },
           update: {},
-          create: { roleId: role.id, permissionId: perm.id },
+          create: { roleId, permissionId: perm.id },
         });
       }
     }
   };
 
-  await assignPermsToRole(kepalaDesa!, ['user.read', 'user.create', 'user.update', 'role.read', 'citizen.*', 'family.*', 'letter.*', 'complaint.*', 'asset.*', 'news.*', 'event.*']);
-  await assignPermsToRole(sekretaris!, ['citizen.read', 'citizen.create', 'citizen.update', 'family.*', 'letter.*', 'complaint.*']);
-  await assignPermsToRole(operator!, ['user.read', 'user.create', 'user.update', 'citizen.*', 'family.*', 'letter.*', 'complaint.*', 'asset.*']);
-  await assignPermsToRole(warga!, ['letter.create', 'letter.read', 'complaint.create', 'news.read', 'event.read']);
+  const villageId = 'default-village-id';
+  const citizienPerms = allPerms.filter((p) => p.slug.startsWith('user.') || p.slug.startsWith('role.read'));
+  const citizienPermIds = citizienPerms.map((p) => p.id);
+  
+  await assignPermsToRole(kepalaDesa!.id, allPerms.filter((p) => !p.slug.startsWith('role.')).map((p) => p.slug));
+  await assignPermsToRole(sekretaris!.id, ['citizen.create', 'citizen.read', 'citizen.update', 'family.create', 'family.read', 'family.update', 'letter.create', 'letter.read', 'letter.update', 'letter.approve', 'complaint.create', 'complaint.read', 'complaint.resolve'].flatMap((slug) => [slug]));
+  await assignPermsToRole(operator!.id, ['user.read', 'user.create', 'user.update', 'citizen.create', 'citizen.read', 'citizen.update', 'citizen.delete', 'family.create', 'family.read', 'family.update', 'letter.create', 'letter.read', 'letter.update', 'complaint.create', 'complaint.read', 'asset.create', 'asset.read', 'asset.update']);
+  await assignPermsToRole(warga!.id, ['letter.create', 'letter.read', 'complaint.create', 'news.read', 'event.read']);
 
   console.log('✅ Role permissions assigned');
 
@@ -110,13 +151,90 @@ async function main() {
   });
   console.log('✅ Super admin created (admin@smartvillage.go.id / admin123)');
 
+  const village = await prisma.village.upsert({
+    where: { code: 'DESA001' },
+    update: {},
+    create: {
+      code: 'DESA001',
+      name: 'Desa Contoh',
+      district: 'Kecamatan Contoh',
+      city: 'Kota Contoh',
+      province: 'Provinsi Contoh',
+      headName: 'Kepala Desa',
+    },
+  });
+
+  for (let i = 1; i <= 30; i++) {
+    const nkk = generateNKK(i);
+    const existingKK = await prisma.familyCard.findFirst({ where: { nkk, deletedAt: null } });
+    if (existingKK) continue;
+
+    await prisma.familyCard.create({
+      data: {
+        nkk,
+        headName: getRandomName(),
+        address: `Jl. Desa No. ${i}`,
+        rt: '001',
+        rw: '001',
+        villageId: village.id,
+      },
+    });
+  }
+  console.log('✅ 30 family cards created');
+
+  for (let i = 1; i <= 100; i++) {
+    const nik = generateNIK(i);
+    const existing = await prisma.citizen.findFirst({ where: { nik, deletedAt: null } });
+    if (existing) continue;
+
+    const birthYear = 1950 + Math.floor(Math.random() * 50);
+    const birthMonth = Math.floor(Math.random() * 12) + 1;
+    const birthDay = Math.floor(Math.random() * 28) + 1;
+
+    await prisma.citizen.create({
+      data: {
+        nik,
+        name: getRandomName(),
+        placeOfBirth: 'Kota Lahir',
+        dateOfBirth: new Date(birthYear, birthMonth, birthDay),
+        gender: getRandomGender() as any,
+        address: `Jl. Desa No. ${i}`,
+        rt: '001',
+        rw: '001',
+        religion: getRandomReligion(),
+        maritalStatus: getRandomMaritalStatus(),
+        occupation: getRandomOccupation(),
+        education: getRandomEducation(),
+        villageId: village.id,
+      },
+    });
+  }
+  console.log('✅ 100 citizens created');
+
   await prisma.letterType.upsert({
     where: { code: 'SK_DOMISILI' },
     update: { name: 'Surat Keterangan Domisili' },
     create: { code: 'SK_DOMISILI', name: 'Surat Keterangan Domisili', requiresApproval: true },
   });
 
-  console.log('\n🎉 Seed completed!');
+  const letterTypes = [
+    { code: 'SK_USAHA', name: 'Surat Keterangan Usaha', requiresApproval: true },
+    { code: 'SK_TIDAK_MAMPU', name: 'Surat Keterangan Tidak Mampu', requiresApproval: true },
+    { code: 'SK_LAHIR', name: 'Surat Keterangan Kelahiran', requiresApproval: true },
+    { code: 'SK_KEMATIAN', name: 'Surat Keterangan Kematian', requiresApproval: true },
+    { code: 'SK_SKCK', name: 'Surat Pengantar SKCK', requiresApproval: true },
+    { code: 'SK_NIKAH', name: 'Surat Keterangan Nikah', requiresApproval: true },
+    { code: 'SK_AHLI_WARIS', name: 'Surat Ahli Waris', requiresApproval: true },
+  ];
+
+  for (const lt of letterTypes) {
+    await prisma.letterType.upsert({
+      where: { code: lt.code },
+      update: { name: lt.name },
+      create: lt,
+    });
+  }
+  console.log(`✅ ${letterTypes.length + 1} letter types created`);
 }
 
 main()

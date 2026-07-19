@@ -85,3 +85,76 @@ npm run lint
 ## License
 
 Proprietary
+
+## API Documentation
+
+All endpoints follow RESTful pattern with consistent response format:
+
+```json
+{
+  "success": true,
+  "message": "Operation completed",
+  "data": {},
+  "meta": {}
+}
+```
+
+### Auth Endpoints
+- `POST /api/v1/auth/login` - Login with email/phone + password
+- `POST /api/v1/auth/refresh` - Refresh access token
+
+### Citizen Endpoints
+- `GET /api/v1/citizens` - List citizens (pagination, search, filter)
+- `GET /api/v1/citizens/:id` - Get citizen by ID
+- `GET /api/v1/citizens/stats` - Get citizen statistics
+- `POST /api/v1/citizens` - Create citizen
+- `PATCH /api/v1/citizens/:id` - Update citizen
+- `DELETE /api/v1/citizens/:id` - Soft delete citizen
+
+### Family Card Endpoints
+- `GET /api/v1/family-cards` - List family cards
+- `GET /api/v1/family-cards/:id` - Get family card by ID
+- `GET /api/v1/family-cards/nkk/:nkk` - Get by NKK
+- `POST /api/v1/family-cards` - Create family card
+- `PATCH /api/v1/family-cards/:id` - Update family card
+- `DELETE /api/v1/family-cards/:id` - Soft delete
+
+### Letter Endpoints
+- `GET /api/v1/letters` - List letters (pagination, search, filter by status)
+- `GET /api/v1/letters/:id` - Get letter by ID
+- `GET /api/v1/letters/types` - List letter types
+- `POST /api/v1/letters` - Submit letter
+- `PATCH /api/v1/letters/:id` - Update letter/status
+- `DELETE /api/v1/letters/:id` - Soft delete
+
+### Dashboard Endpoints
+- `GET /api/v1/dashboard` - Overview statistics
+- `GET /api/v1/dashboard/stats` - Detailed statistics
+
+Swagger UI available at: `http://localhost:3001/api/docs`
+
+## Frontend MVP
+
+```
+apps/web-admin/
+├── app/
+│   ├── (auth)/
+│   │   └── login/page.tsx
+│   └── (dashboard)/
+│       ├── dashboard/page.tsx
+│       ├── citizens/page.tsx
+│       └── letters/page.tsx
+├── components/
+│   └── ui/
+│       ├── badge.tsx
+│       ├── button.tsx
+│       ├── card.tsx
+│       └── input.tsx
+└── lib/
+    ├── api-client.ts
+    ├── actions/
+    │   └── auth.ts
+    └── utils.ts
+```
+
+Run frontend: `npm run dev` (di `apps/web-admin`)
