@@ -1,5 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsBoolean, Length, IsNumber } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsEnum, IsDateString, IsBoolean, Length } from 'class-validator';
 
 export enum Gender {
   LAKI_LAKI = 'LAKI_LAKI',
@@ -9,33 +8,33 @@ export enum Gender {
 export class CreateCitizenDto {
   @IsString()
   @Length(16, 16)
-  nik: string;
+  nik!: string;
 
   @IsString()
-  name: string;
+  name!: string;
 
   @IsDateString()
-  dateOfBirth: string;
+  dateOfBirth!: string;
 
   @IsEnum(Gender)
-  gender: Gender;
+  gender!: Gender;
 
   @IsString()
-  address: string;
-
-  @IsString()
-  @Length(3, 3)
-  rt: string;
+  address!: string;
 
   @IsString()
   @Length(3, 3)
-  rw: string;
+  rt!: string;
 
   @IsString()
-  villageId: string;
+  @Length(3, 3)
+  rw!: string;
 
   @IsString()
-  religion: string;
+  villageId!: string;
+
+  @IsString()
+  religion!: string;
 
   @IsOptional()
   @IsString()
@@ -115,12 +114,10 @@ export class QueryCitizenDto {
   isAlive?: boolean;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  page?: number;
+  @IsString()
+  page?: string;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  limit?: number;
+  @IsString()
+  limit?: string;
 }

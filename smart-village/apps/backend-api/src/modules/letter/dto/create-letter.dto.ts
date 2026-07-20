@@ -1,32 +1,21 @@
-import { IsString, IsOptional, IsEnum, IsUUID } from 'class-validator';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 import { LetterStatus } from '../../../shared/enums/letter.enum';
 
 export class CreateLetterDto {
-  @IsUUID()
-  citizenId: string;
-
-  @IsUUID()
-  letterTypeId: string;
+  @IsString()
+  citizenId!: string;
 
   @IsString()
-  subject: string;
+  letterTypeId!: string;
 
   @IsString()
-  content: string;
+  subject!: string;
+
+  @IsOptional()
+  @IsString()
+  content?: string;
 
   @IsOptional()
   @IsEnum(LetterStatus)
   status?: LetterStatus;
-
-  @IsOptional()
-  @IsString()
-  priority?: string;
-
-  @IsOptional()
-  @IsString()
-  validUntil?: string;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
 }
