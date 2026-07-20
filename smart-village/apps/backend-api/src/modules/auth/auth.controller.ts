@@ -2,8 +2,6 @@ import { Controller, Post, Body, UseGuards, Request, HttpCode, HttpStatus } from
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from '../../core/common/guards/local-auth.guard';
 import { RefreshAuthGuard } from '../../core/common/guards/refresh-auth.guard';
-import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -11,7 +9,7 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req: any, @Body() loginDto: LoginDto) {
+  async login(@Request() req: any) {
     return this.authService.login(req.user);
   }
 

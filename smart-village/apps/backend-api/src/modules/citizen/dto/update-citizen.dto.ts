@@ -1,6 +1,9 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, IsBoolean } from 'class-validator';
-import { Type } from 'class-transformer';
-import { Gender } from '../../../shared/enums/citizen.enum';
+import { IsString, IsOptional, IsEnum, IsDateString, IsBoolean } from 'class-validator';
+
+export enum Gender {
+  LAKI_LAKI = 'LAKI_LAKI',
+  PEREMPUAN = 'PEREMPUAN',
+}
 
 export class UpdateCitizenDto {
   @IsOptional()
@@ -9,15 +12,7 @@ export class UpdateCitizenDto {
 
   @IsOptional()
   @IsString()
-  nkk?: string;
-
-  @IsOptional()
-  @IsString()
   name?: string;
-
-  @IsOptional()
-  @IsString()
-  placeOfBirth?: string;
 
   @IsOptional()
   @IsDateString()
@@ -26,10 +21,6 @@ export class UpdateCitizenDto {
   @IsOptional()
   @IsEnum(Gender)
   gender?: Gender;
-
-  @IsOptional()
-  @IsString()
-  bloodType?: string;
 
   @IsOptional()
   @IsString()
@@ -45,67 +36,15 @@ export class UpdateCitizenDto {
 
   @IsOptional()
   @IsString()
-  villageId?: string;
-
-  @IsOptional()
-  @IsString()
-  district?: string;
-
-  @IsOptional()
-  @IsString()
-  city?: string;
-
-  @IsOptional()
-  @IsString()
-  province?: string;
-
-  @IsOptional()
-  @IsString()
-  postalCode?: string;
-
-  @IsOptional()
-  @IsString()
   religion?: string;
 
   @IsOptional()
   @IsString()
-  maritalStatus?: string;
-
-  @IsOptional()
-  @IsString()
-  occupation?: string;
-
-  @IsOptional()
-  @IsString()
-  nationality?: string;
-
-  @IsOptional()
-  @IsString()
-  fatherName?: string;
-
-  @IsOptional()
-  @IsString()
-  motherName?: string;
-
-  @IsOptional()
-  @IsString()
-  spouseName?: string;
-
-  @IsOptional()
-  @IsString()
-  familyStatus?: string;
-
-  @IsOptional()
-  @IsString()
-  photo?: string;
+  familyCardId?: string;
 
   @IsOptional()
   @IsBoolean()
   isAlive?: boolean;
-
-  @IsOptional()
-  @IsDateString()
-  deathDate?: string;
 }
 
 export class QueryCitizenDto {
@@ -119,7 +58,7 @@ export class QueryCitizenDto {
 
   @IsOptional()
   @IsString()
-  village?: string;
+  villageId?: string;
 
   @IsOptional()
   @IsString()
@@ -134,12 +73,10 @@ export class QueryCitizenDto {
   isAlive?: boolean;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  page?: number;
+  @IsString()
+  page?: string;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  limit?: number;
+  @IsString()
+  limit?: string;
 }

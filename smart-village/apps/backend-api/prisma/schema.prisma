@@ -17,6 +17,12 @@ model Village {
   updatedAt  DateTime @updatedAt
   deletedAt  DateTime?
 
+  citizens     Citizen[]
+  familyCards  FamilyCard[]
+  letters      Letter[]
+  complaints   Complaint[]
+  assets       Asset[]
+
   @@map("villages")
 }
 
@@ -79,6 +85,8 @@ model User {
   refreshTokens RefreshToken[]
   submittedLetters Letter[] @relation("LetterSubmitter")
   approvedLetters Letter[] @relation("LetterApprover")
+  submittedComplaints Complaint[] @relation("ComplaintSubmitter")
+  resolvedComplaints Complaint[] @relation("ComplaintResolver")
 
   @@index([roleId])
   @@map("users")
@@ -96,6 +104,7 @@ model FamilyCard {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
 
+  village  Village?   @relation(fields: [villageId], references: [id])
   citizens Citizen[]
 
   @@index([villageId])
@@ -119,6 +128,7 @@ model Citizen {
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
+  village   Village?    @relation(fields: [villageId], references: [id])
   familyCard FamilyCard? @relation(fields: [familyCardId], references: [id])
   letters Letter[]
 
@@ -157,6 +167,7 @@ model Letter {
   updatedAt    DateTime     @updatedAt
   deletedAt    DateTime?
 
+  village   Village?  @relation(fields: [villageId], references: [id])
   citizen    Citizen    @relation(fields: [citizenId], references: [id])
   letterType LetterType @relation(fields: [letterTypeId], references: [id])
   submitter  User       @relation("LetterSubmitter", fields: [submittedBy], references: [id])
@@ -171,6 +182,7 @@ model Letter {
 model Complaint {
   id             String          @id @default(uuid())
   villageId      String
+  citizenId      String
   trackingNumber String          @unique @db.VarChar(50)
   category       ComplaintCategory
   subject        String          @db.VarChar(255)
@@ -182,6 +194,10 @@ model Complaint {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   deletedAt      DateTime?
+
+  citizen   Citizen? @relation(fields: [citizenId], references: [id])
+  submitter User     @relation("ComplaintSubmitter", fields: [submittedBy], references: [id])
+  resolver  User?    @relation("ComplaintResolver", fields: [resolvedBy], references: [id])
 
   @@index([villageId])
   @@map("complaints")

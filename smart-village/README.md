@@ -141,6 +141,16 @@ All endpoints follow RESTful pattern with consistent response format:
 - `PATCH /api/v1/letters/:id` - Update letter/status
 - `DELETE /api/v1/letters/:id` - Soft delete
 
+### Complaint Endpoints
+- `GET /api/v1/complaints` - List complaints
+- `GET /api/v1/complaints/:id` - Get complaint by ID
+- `POST /api/v1/complaints` - Submit complaint
+- `PATCH /api/v1/complaints/:id` - Update complaint status
+- `DELETE /api/v1/complaints/:id` - Soft delete
+
+### Asset Endpoints
+- `GET /api/v1/assets` - List assets
+
 ### Dashboard Endpoints
 - `GET /api/v1/dashboard` - Overview statistics
 - `GET /api/v1/dashboard/stats` - Detailed statistics

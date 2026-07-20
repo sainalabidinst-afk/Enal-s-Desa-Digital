@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { ConfigService } from '@nestjs/config';
 import { TransformInterceptor } from './core/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './core/filters/http-exception.filter';
+import rateLimit from 'express-rate-limit';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -14,6 +15,18 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.use(helmet());
+
+  app.use(
+    '/api/v1/auth',
+    rateLimit({
+      windowMs: 60 * 1000,
+      max: 5,
+      message: {
+        success: false,
+        message: 'Too many login attempts, please try again later',
+      },
+    })
+  );
 
   const corsOrigins = configService.get<string>('CORS_ORIGINS', 'http://localhost:3000');
   app.enableCors({

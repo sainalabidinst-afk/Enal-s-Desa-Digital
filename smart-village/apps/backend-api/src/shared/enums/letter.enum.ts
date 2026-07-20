@@ -4,7 +4,5 @@ export enum LetterStatus {
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
   SIGNED = 'SIGNED',
-  PRINTED = 'PRINTED',
-  EXPIRED = 'EXPIRED',
   CANCELLED = 'CANCELLED',
 }

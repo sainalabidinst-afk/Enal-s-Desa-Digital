@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, IsBoolean, Length } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsDateString, IsBoolean, Length, IsNumber } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum Gender {
@@ -14,18 +14,11 @@ export class CreateCitizenDto {
   @IsString()
   name: string;
 
-  @IsString()
-  placeOfBirth: string;
-
   @IsDateString()
   dateOfBirth: string;
 
   @IsEnum(Gender)
   gender: Gender;
-
-  @IsOptional()
-  @IsString()
-  bloodType?: string;
 
   @IsString()
   address: string;
@@ -42,51 +35,11 @@ export class CreateCitizenDto {
   villageId: string;
 
   @IsString()
-  district: string;
-
-  @IsString()
-  city: string;
-
-  @IsString()
-  province: string;
-
-  @IsOptional()
-  @IsString()
-  postalCode?: string;
-
-  @IsString()
   religion: string;
 
-  @IsString()
-  maritalStatus: string;
-
   @IsOptional()
   @IsString()
-  occupation?: string;
-
-  @IsOptional()
-  @IsString()
-  nationality?: string;
-
-  @IsOptional()
-  @IsString()
-  fatherName?: string;
-
-  @IsOptional()
-  @IsString()
-  motherName?: string;
-
-  @IsOptional()
-  @IsString()
-  spouseName?: string;
-
-  @IsOptional()
-  @IsString()
-  familyStatus?: string;
-
-  @IsOptional()
-  @IsString()
-  photo?: string;
+  familyCardId?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -104,20 +57,12 @@ export class UpdateCitizenDto {
   name?: string;
 
   @IsOptional()
-  @IsString()
-  placeOfBirth?: string;
-
-  @IsOptional()
   @IsDateString()
   dateOfBirth?: string;
 
   @IsOptional()
   @IsEnum(Gender)
   gender?: Gender;
-
-  @IsOptional()
-  @IsString()
-  bloodType?: string;
 
   @IsOptional()
   @IsString()
@@ -133,67 +78,15 @@ export class UpdateCitizenDto {
 
   @IsOptional()
   @IsString()
-  village?: string;
-
-  @IsOptional()
-  @IsString()
-  district?: string;
-
-  @IsOptional()
-  @IsString()
-  city?: string;
-
-  @IsOptional()
-  @IsString()
-  province?: string;
-
-  @IsOptional()
-  @IsString()
-  postalCode?: string;
-
-  @IsOptional()
-  @IsString()
   religion?: string;
 
   @IsOptional()
   @IsString()
-  maritalStatus?: string;
-
-  @IsOptional()
-  @IsString()
-  occupation?: string;
-
-  @IsOptional()
-  @IsString()
-  nationality?: string;
-
-  @IsOptional()
-  @IsString()
-  fatherName?: string;
-
-  @IsOptional()
-  @IsString()
-  motherName?: string;
-
-  @IsOptional()
-  @IsString()
-  spouseName?: string;
-
-  @IsOptional()
-  @IsString()
-  familyStatus?: string;
-
-  @IsOptional()
-  @IsString()
-  photo?: string;
+  familyCardId?: string;
 
   @IsOptional()
   @IsBoolean()
   isAlive?: boolean;
-
-  @IsOptional()
-  @IsDateString()
-  deathDate?: string;
 }
 
 export class QueryCitizenDto {
@@ -230,12 +123,4 @@ export class QueryCitizenDto {
   @Type(() => Number)
   @IsNumber()
   limit?: number;
-
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @IsOptional()
-  @IsString()
-  sortOrder?: 'asc' | 'desc';
 }

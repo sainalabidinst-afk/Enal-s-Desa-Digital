@@ -137,9 +137,6 @@ export class CitizenService {
     if (data.dateOfBirth) {
       data.dateOfBirth = new Date(data.dateOfBirth);
     }
-    if (data.deathDate) {
-      data.deathDate = new Date(data.deathDate);
-    }
 
     const updated = await prisma.citizen.update({
       where: { id },

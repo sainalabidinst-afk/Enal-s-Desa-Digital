@@ -25,21 +25,6 @@ function getRandomReligion() {
   return religions[Math.floor(Math.random() * religions.length)];
 }
 
-function getRandomMaritalStatus() {
-  const statuses = ['Belum Kawin', 'Kawin', 'Cerai Hidup', 'Cerai Mati'];
-  return statuses[Math.floor(Math.random() * statuses.length)];
-}
-
-function getRandomEducation() {
-  const educations = ['SD', 'SMP', 'SMA', 'D1', 'D2', 'D3', 'S1', 'S2'];
-  return educations[Math.floor(Math.random() * educations.length)];
-}
-
-function getRandomOccupation() {
-  const occupations = ['Petani', 'Pedagang', 'PNS', 'Swasta', 'TNI/Polri', 'Wiraswasta', 'Buruh', 'Pelajar'];
-  return occupations[Math.floor(Math.random() * occupations.length)];
-}
-
 async function main() {
   console.log('🌱 Seeding database...');
 
@@ -66,10 +51,6 @@ async function main() {
     { name: 'Read Asset', slug: 'asset.read', resource: 'asset', action: 'read' },
     { name: 'Create Asset', slug: 'asset.create', resource: 'asset', action: 'create' },
     { name: 'Update Asset', slug: 'asset.update', resource: 'asset', action: 'update' },
-    { name: 'Read News', slug: 'news.read', resource: 'news', action: 'read' },
-    { name: 'Create News', slug: 'news.create', resource: 'news', action: 'create' },
-    { name: 'Read Event', slug: 'event.read', resource: 'event', action: 'read' },
-    { name: 'Create Event', slug: 'event.create', resource: 'event', action: 'create' },
   ];
 
   for (const perm of permissions) {
@@ -126,14 +107,10 @@ async function main() {
     }
   };
 
-  const villageId = 'default-village-id';
-  const citizienPerms = allPerms.filter((p) => p.slug.startsWith('user.') || p.slug.startsWith('role.read'));
-  const citizienPermIds = citizienPerms.map((p) => p.id);
-  
   await assignPermsToRole(kepalaDesa!.id, allPerms.filter((p) => !p.slug.startsWith('role.')).map((p) => p.slug));
-  await assignPermsToRole(sekretaris!.id, ['citizen.create', 'citizen.read', 'citizen.update', 'family.create', 'family.read', 'family.update', 'letter.create', 'letter.read', 'letter.update', 'letter.approve', 'complaint.create', 'complaint.read', 'complaint.resolve'].flatMap((slug) => [slug]));
+  await assignPermsToRole(sekretaris!.id, ['citizen.create', 'citizen.read', 'citizen.update', 'family.create', 'family.read', 'family.update', 'letter.create', 'letter.read', 'letter.update', 'letter.approve', 'complaint.create', 'complaint.read', 'complaint.resolve']);
   await assignPermsToRole(operator!.id, ['user.read', 'user.create', 'user.update', 'citizen.create', 'citizen.read', 'citizen.update', 'citizen.delete', 'family.create', 'family.read', 'family.update', 'letter.create', 'letter.read', 'letter.update', 'complaint.create', 'complaint.read', 'asset.create', 'asset.read', 'asset.update']);
-  await assignPermsToRole(warga!.id, ['letter.create', 'letter.read', 'complaint.create', 'news.read', 'event.read']);
+  await assignPermsToRole(warga!.id, ['letter.create', 'letter.read', 'complaint.create', 'asset.read']);
 
   console.log('✅ Role permissions assigned');
 
@@ -146,7 +123,6 @@ async function main() {
       name: 'Super Admin',
       password,
       roleId: superAdmin!.id,
-      isVerified: true,
     },
   });
   console.log('✅ Super admin created (admin@smartvillage.go.id / admin123)');
@@ -158,9 +134,6 @@ async function main() {
       code: 'DESA001',
       name: 'Desa Contoh',
       district: 'Kecamatan Contoh',
-      city: 'Kota Contoh',
-      province: 'Provinsi Contoh',
-      headName: 'Kepala Desa',
     },
   });
 
@@ -195,46 +168,37 @@ async function main() {
       data: {
         nik,
         name: getRandomName(),
-        placeOfBirth: 'Kota Lahir',
         dateOfBirth: new Date(birthYear, birthMonth, birthDay),
         gender: getRandomGender() as any,
         address: `Jl. Desa No. ${i}`,
         rt: '001',
         rw: '001',
         religion: getRandomReligion(),
-        maritalStatus: getRandomMaritalStatus(),
-        occupation: getRandomOccupation(),
-        education: getRandomEducation(),
         villageId: village.id,
       },
     });
   }
   console.log('✅ 100 citizens created');
 
-  await prisma.letterType.upsert({
-    where: { code: 'SK_DOMISILI' },
-    update: { name: 'Surat Keterangan Domisili' },
-    create: { code: 'SK_DOMISILI', name: 'Surat Keterangan Domisili', requiresApproval: true },
-  });
-
   const letterTypes = [
-    { code: 'SK_USAHA', name: 'Surat Keterangan Usaha', requiresApproval: true },
-    { code: 'SK_TIDAK_MAMPU', name: 'Surat Keterangan Tidak Mampu', requiresApproval: true },
-    { code: 'SK_LAHIR', name: 'Surat Keterangan Kelahiran', requiresApproval: true },
-    { code: 'SK_KEMATIAN', name: 'Surat Keterangan Kematian', requiresApproval: true },
-    { code: 'SK_SKCK', name: 'Surat Pengantar SKCK', requiresApproval: true },
-    { code: 'SK_NIKAH', name: 'Surat Keterangan Nikah', requiresApproval: true },
-    { code: 'SK_AHLI_WARIS', name: 'Surat Ahli Waris', requiresApproval: true },
+    { code: 'SK_DOMISILI', name: 'Surat Keterangan Domisili' },
+    { code: 'SK_USAHA', name: 'Surat Keterangan Usaha' },
+    { code: 'SK_TIDAK_MAMPU', name: 'Surat Keterangan Tidak Mampu' },
+    { code: 'SK_LAHIR', name: 'Surat Keterangan Kelahiran' },
+    { code: 'SK_KEMATIAN', name: 'Surat Keterangan Kematian' },
+    { code: 'SK_SKCK', name: 'Surat Pengantar SKCK' },
+    { code: 'SK_NIKAH', name: 'Surat Keterangan Nikah' },
+    { code: 'SK_AHLI_WARIS', name: 'Surat Ahli Waris' },
   ];
 
   for (const lt of letterTypes) {
     await prisma.letterType.upsert({
       where: { code: lt.code },
       update: { name: lt.name },
-      create: lt,
+      create: { ...lt, requiresApproval: true },
     });
   }
-  console.log(`✅ ${letterTypes.length + 1} letter types created`);
+  console.log(`✅ ${letterTypes.length} letter types created`);
 }
 
 main()
